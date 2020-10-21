@@ -1,0 +1,55 @@
+﻿@using Todo_Service.Models;
+<div class="modal @ModalClass" tabindex="-1" role="dialog" style="display:@ModalDisplay">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Warning</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @onclick="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div>@ModalBody</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" @onclick="Close" >Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@if (ShowBackdrop)
+{
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    [Parameter]
+    public Action OnClose { get; set; }
+    public Guid Guid { get; private set; } = new Guid();
+    private string ModalDisplay = "none;";
+    private string ModalClass = "";
+    private string ModalBody = "";
+    private bool ShowBackdrop = false;
+
+    public void SetName (string name)
+    {
+        ModalBody = $"An item with the name \"{name}\" already exists.";
+    }
+
+    public void Open()
+    {
+        ModalDisplay = "block;";
+        ModalClass = "Show";
+        ShowBackdrop = true;
+        StateHasChanged();
+    }
+
+    public void Close()
+    {
+        ModalDisplay = "none;";
+        ModalClass = "";
+        ShowBackdrop = false;
+        StateHasChanged();
+        OnClose?.Invoke();
+    }
+}

@@ -1,0 +1,16 @@
+﻿ul.no-display {
+    list-style-type: none;
+}
+
+input:focus {
+    border: none;
+    border-width: 0px;
+    margin: 2px;
+    border-style: none;
+}
+.strikeThrough {
+    text-decoration: line-through;
+}
+li.negative-margin {
+    margin-left: -40px;
+}

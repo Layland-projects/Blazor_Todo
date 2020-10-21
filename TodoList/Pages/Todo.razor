@@ -1,0 +1,77 @@
+﻿@page "/todo"
+@using Helpers;
+@using Todo_Service.Models;
+@using TodoList.Components;
+@using Todo_Service.ApiHelpers;
+@using RestSharp;
+
+<TodoDeleteModal OnClose="RefreshList" @ref="DeleteWarning"></TodoDeleteModal>
+<TodoAddWarning @ref="AddWarning"></TodoAddWarning>
+
+<div class="input-group mb-3 col-md-3">
+    <input type="text" class="form-control" placeholder="Something todo" @bind="newTodo"/>
+    <div class="input-group-append">
+        <button class="btn btn-outline-secondary" @onclick="new Action(() => NewToDoChecker(newTodo))">Add Todo</button>
+    </div>
+</div>
+
+<div class="col-md-3">
+    <h3>Todo List (@todos.Count(t => !t.IsComplete))</h3>
+    <ul class="no-display">
+        @foreach (var todo in todos)
+        {
+            <li class="negative-margin">
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" @bind="todo.IsComplete" />
+                        </div>
+                    </div>
+                    <input type="text" class="form-control @TodoHelper.strikeThroughCSS(todo)" @bind="todo.Name" />
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-danger" @onclick="new Action(() => TriggerDeleteModal(todo))">Delete</button>
+                    </div>
+                </div>
+            </li>
+        }
+    </ul>
+</div>
+
+@code {
+    static TodoHelper helper = new TodoHelper(new TodoApiHelper(new RestClient()));
+    private IList<TodoItem> todos = helper.GetTodoList().Result;
+    private string newTodo;
+    private TodoDeleteModal DeleteWarning = new TodoDeleteModal();
+    private TodoAddWarning AddWarning = new TodoAddWarning();
+
+    private void TriggerDeleteModal(TodoItem item)
+    {
+        DeleteWarning.SetTargetItem(item, todos);
+        DeleteWarning.Open();
+    }
+
+    private void TriggerAddModal(string name)
+    {
+        AddWarning.SetName(name);
+        AddWarning.Open();
+    }
+
+    private async void NewToDoChecker(string name)
+    {
+        if(todos.Where(x => x.Name == name).Count() > 0)
+        {
+            TriggerAddModal(name);
+        }
+        else
+        {
+            var code = await helper.AddToDo(name);
+            RefreshList();
+        }
+    }
+
+    private void RefreshList()
+    {
+        todos = helper.GetTodoList().Result;
+        StateHasChanged();
+    }
+}

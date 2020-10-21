@@ -1,0 +1,71 @@
+﻿@using Todo_Service.Models;
+@using TodoList.Helpers;
+@using Todo_Service.ApiHelpers;
+@using RestSharp;
+<div class="modal @ModalClass" tabindex="-1" role="dialog" style="display:@ModalDisplay">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Warning</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @onclick="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div>@ModalBody</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick="Close" >Close</button>
+                <button type="button" class="btn btn-danger" @onclick="Delete" >Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+@if (ShowBackdrop)
+{
+<div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    [Parameter]
+    public Action OnClose { get; set; }
+    public TodoHelper helper = new TodoHelper(new TodoApiHelper(new RestClient()));
+    public Guid Guid { get; private set; } = new Guid();
+    private string ModalDisplay = "none;";
+    private string ModalClass = "";
+    private string ModalBody = "";
+    private bool ShowBackdrop = false;
+    private TodoItem currentItem;
+    private IList<TodoItem> allItems;
+
+    public void SetTargetItem (TodoItem item, IList<TodoItem> containingList)
+    {
+        ModalBody = $"Are you sure you want to delete \"{item.Name}\"?\n" +
+                $"This action cannot be reverted.";
+        currentItem = item;
+        allItems = containingList;
+    }
+
+    public void Open()
+    {
+        ModalDisplay = "block;";
+        ModalClass = "Show";
+        ShowBackdrop = true;
+        StateHasChanged();
+    }
+
+    public void Close()
+    {
+        ModalDisplay = "none;";
+        ModalClass = "";
+        ShowBackdrop = false;
+        StateHasChanged();
+        OnClose?.Invoke();
+    }
+
+    public async void Delete()
+    {
+        var res = await helper.RemoveTodo(currentItem);
+        Close();
+    }
+}
